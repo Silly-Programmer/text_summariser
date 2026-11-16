@@ -32,10 +32,10 @@ export default async function LandingPage() {
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-2 lg:pt-20">
         <div>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Turn a 400-page PDF into notes you can actually study from.
+            Turn your PDF into notes you can actually study from.
           </h1>
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Upload your lecture notes or textbook. Get clear summaries with page references,
+            Upload your lecture notes or a chapter. Get clear summaries with page references,
             then test yourself with a quiz made from the same material.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -54,8 +54,8 @@ export default async function LandingPage() {
         <div className="rounded-xl border bg-card p-4 shadow-sm sm:p-5" aria-label="Example of generated notes and quiz">
           <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Operating Systems.pdf</span>
-            <span className="ml-auto text-muted-foreground">412 pages</span>
+            <span className="font-medium">Operating Systems Notes.pdf</span>
+            <span className="ml-auto text-muted-foreground">48 pages</span>
           </div>
 
           <div className="mt-4 rounded-md border p-4">
@@ -64,7 +64,7 @@ export default async function LandingPage() {
               A situation where processes wait on each other forever, so none of them can move ahead.
               It needs four conditions to happen together.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">Source: page 187</p>
+            <p className="mt-2 text-xs text-muted-foreground">Source: page 31</p>
           </div>
 
           <div className="mt-3 rounded-md border p-4">
@@ -92,7 +92,7 @@ export default async function LandingPage() {
           <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
           <ol className="mt-8 grid gap-8 sm:grid-cols-3">
             {[
-              ["Upload your PDF", "Typed or scanned, short or very long. We read every page."],
+              ["Upload your PDF", "Typed or scanned PDFs. Scanned pages take a little longer to read."],
               ["Get your notes", "Pick a quick summary, detailed notes, chapter-wise notes, or important Q&A."],
               ["Take a quiz", "Choose how many questions and how hard. See your score and why each answer is right."],
             ].map(([title, text], i) => (
@@ -115,7 +115,7 @@ export default async function LandingPage() {
         <h2 className="text-2xl font-semibold tracking-tight">Built for exam prep</h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           {[
-            [ScanText, "Works on scanned pages", "Photos of notes and scanned books are read too, not just typed PDFs."],
+            [ScanText, "Works on scanned pages", "Photos of notes and scanned pages are read too, not just typed PDFs."],
             [BookOpenCheck, "Easy language, nothing skipped", "Hard topics are explained simply, and important definitions are highlighted."],
             [FileText, "Page references", "Every point links back to the page in your PDF, so you can check the source."],
             [ListChecks, "Real exam-style quizzes", "One question at a time, with a score, review, and explanations at the end."],

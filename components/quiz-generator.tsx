@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { DEFAULT_QUIZ_COUNT, QUIZ_COUNTS } from "@/lib/quiz/options";
+import { defaultQuizCount, quizCountOptions } from "@/lib/quiz/options";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -13,9 +13,10 @@ const LEVELS = [
   { value: "Hard", text: "Reasoning with close options" },
 ] as const;
 
-export function QuizGenerator({ documentId }: { documentId: string }) {
+export function QuizGenerator({ documentId, maxQuestions }: { documentId: string; maxQuestions: number }) {
   const router = useRouter();
-  const [count, setCount] = useState<number>(DEFAULT_QUIZ_COUNT);
+  const options = quizCountOptions(maxQuestions);
+  const [count, setCount] = useState<number>(defaultQuizCount(options));
   const [difficulty, setDifficulty] = useState<(typeof LEVELS)[number]["value"]>("Medium");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,13 +45,23 @@ export function QuizGenerator({ documentId }: { documentId: string }) {
       selected ? "border-primary bg-accent text-accent-foreground" : "bg-card hover:border-primary hover:bg-accent"
     );
 
+  if (options.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed bg-card p-5 text-sm text-muted-foreground">
+        This document is too short to make a quiz. Upload a longer PDF to test yourself.
+      </div>
+    );
+  }
+
+  const most = options[options.length - 1];
+
   return (
     <div className="rounded-lg border bg-card p-5">
       <div className="grid gap-5">
         <div role="radiogroup" aria-labelledby="quiz-count-label">
           <p id="quiz-count-label" className="mb-2 text-sm font-medium">Number of questions</p>
           <div className="flex flex-wrap gap-2">
-            {QUIZ_COUNTS.map((n) => (
+            {options.map((n) => (
               <button key={n} type="button" role="radio" aria-checked={count === n} disabled={busy} onClick={() => setCount(n)} className={chip(count === n)}>
                 {n}
               </button>
@@ -82,7 +93,9 @@ export function QuizGenerator({ documentId }: { documentId: string }) {
           <Button onClick={start} disabled={busy}>
             {busy && <Loader2 className="animate-spin" />} Create quiz
           </Button>
-          <p className="text-sm text-muted-foreground">Questions cover the whole document and show the page each answer comes from. Very short documents may give fewer questions.</p>
+          <p className="text-sm text-muted-foreground">{most < 30
+              ? `This document has enough material for up to ${most} questions. Longer documents allow more.`
+              : "Questions cover the whole document and show the page each answer comes from."}</p>
         </div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       </div>

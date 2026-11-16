@@ -29,5 +29,5 @@ export const prompts = {
   chapter: (t: string) =>
     `Summarize the text below section by section. If it contains chapter, unit or section titles, use them as "### " headings; otherwise name each topic yourself. For each heading write a short paragraph, then key points, then key terms in bold. Keep page references.\n\n${t}`,
   qa: (t: string) =>
-    `Write 4 to 6 important exam-style questions with clear, correct answers based on the text below. Format each as:\n**Q:** question\n**A:** answer (p. X)\nCover the most important ideas, not trivia.\n\n${t}`,
+    `Write 4 to 6 important exam-style questions with clear, correct answers based on the text below. Format each one exactly like this, with the answer on the line right below the question and one blank line between questions:\n\n**Q:** question\n**A:** answer (p. X)\n\nCover the most important ideas, not trivia.\n\n${t}`,
 };

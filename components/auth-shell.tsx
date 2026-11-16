@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FileText, GraduationCap, ListChecks, NotebookText } from "lucide-react";
 
 const POINTS = [
-    { icon: FileText, title: "Upload any PDF", text: "Typed or scanned, even hundreds of pages." },
+    { icon: FileText, title: "Upload any PDF", text: "Typed or scanned PDFs, ready in minutes." },
     { icon: NotebookText, title: "Notes in simple language", text: "Every point comes with its page number." },
     { icon: ListChecks, title: "Quizzes with explanations", text: "Test yourself and see why each answer is right." },
 ];

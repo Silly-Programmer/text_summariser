@@ -1,6 +1,7 @@
 import { AI_LIMITS } from "@/lib/config";
 import { mapLimit } from "@/lib/async";
 import type { AIProvider } from "@/lib/ai/types";
+import { formatQa } from "./format";
 import { prompts, SYSTEM, type SummaryType } from "./prompts";
 
 export type ChunkInput = { pageStart: number; pageEnd: number; content: string };
@@ -61,7 +62,7 @@ export async function buildSummary(
   const parts = await mapLimit(chunks, AI_LIMITS.concurrency, async (c, i) => {
     const out = await run(make(c.content));
     await step(`Writing part ${i + 1} of ${total}`);
-    return `## ${pages(c)}\n\n${out}`;
+    return `## ${pages(c)}\n\n${type === "qa" ? formatQa(out) : out}`;
   });
   return parts.join("\n\n---\n\n");
 }

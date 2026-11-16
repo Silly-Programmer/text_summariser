@@ -5,6 +5,8 @@ import { AppError, errorResponse, UUID_RE } from "@/lib/errors";
 import { getDocument } from "@/lib/db/documents";
 import { assertCanStartAiJob } from "@/lib/db/jobs";
 import { createQuiz, findActiveQuiz } from "@/lib/db/quizzes";
+import { QUIZ_LIMITS } from "@/lib/config";
+import { getQuizCapacity } from "@/lib/quiz/capacity";
 import { createQuizBody } from "@/lib/quiz/schema";
 import { generateQuiz } from "@/lib/quiz/generate";
 
@@ -23,6 +25,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const doc = await getDocument(userId, id);
     if (!doc) throw new AppError("Document not found.", 404);
     if (doc.status !== "ready") throw new AppError("This document is still being processed.", 409);
+
+    const capacity = await getQuizCapacity(userId, doc);
+    if (capacity < QUIZ_LIMITS.minQuestions) throw new AppError("This document is too short to make a quiz. Try a longer PDF.");
+    if (count > capacity) throw new AppError(`This document has enough material for up to ${capacity} questions. Choose ${capacity} or fewer.`);
 
     getAI(); // throws a clear error if the AI key/model are not configured
 

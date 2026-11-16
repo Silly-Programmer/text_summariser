@@ -6,6 +6,7 @@ import { UUID_RE } from "@/lib/errors";
 import { getDocument, isStale } from "@/lib/db/documents";
 import { listSummariesForDocument } from "@/lib/db/summaries";
 import { listQuizzesForDocument } from "@/lib/db/quizzes";
+import { getQuizCapacity } from "@/lib/quiz/capacity";
 import { TYPE_LABEL } from "@/lib/summarize/prompts";
 import { formatBytes, formatDate } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
@@ -26,8 +27,10 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   const doc = await getDocument(userId, id);
   if (!doc) notFound();
 
-  const [summaries, quizzes] =
-    doc.status === "ready" ? await Promise.all([listSummariesForDocument(userId, id), listQuizzesForDocument(userId, id)]) : [[], []];
+  const [summaries, quizzes, quizMax] =
+    doc.status === "ready"
+      ? await Promise.all([listSummariesForDocument(userId, id), listQuizzesForDocument(userId, id), getQuizCapacity(userId, doc)])
+      : [[], [], 0];
 
   return (
     <>
@@ -79,7 +82,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           )}
 
           <h2 className="mb-3 mt-10 text-lg font-semibold">Test yourself</h2>
-          <QuizGenerator documentId={doc.id} />
+          <QuizGenerator documentId={doc.id} maxQuestions={quizMax} />
 
           <h2 className="mb-3 mt-10 text-lg font-semibold">Your quizzes</h2>
           {quizzes.length === 0 ? (

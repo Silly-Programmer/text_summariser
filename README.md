@@ -1,6 +1,6 @@
 # StudyBuddy: AI Study Assistant
 
-Upload a PDF (typed or scanned, even hundreds of pages), get easy notes with page references, then test yourself with a quiz.
+Upload a PDF (typed or scanned), get easy notes with page references, then test yourself with a quiz.
 
 **Status:** All three phases are built. Phases 1 and 2 are tested. Phase 3 (quizzes, save/rename, security audit) is built and its quiz logic is unit-tested, but it still needs your own end-to-end test with real keys (see "Testing Phase 3" below).
 
