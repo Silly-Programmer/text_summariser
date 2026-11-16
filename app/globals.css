@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 25% 98%;
+    --foreground: 224 30% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 30% 14%;
+    --primary: 226 55% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 22% 94%;
+    --secondary-foreground: 224 30% 20%;
+    --muted: 220 22% 94%;
+    --muted-foreground: 222 12% 40%;
+    --accent: 226 60% 95%;
+    --accent-foreground: 226 55% 28%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
+    --ring: 226 55% 46%;
+    --radius: 0.625rem;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
+}
+
+/* Rendered AI notes */
+@layer components {
+  .notes { @apply text-[0.95rem] leading-7; }
+  .notes h1 { @apply mb-2 mt-6 text-2xl font-semibold; }
+  .notes h2 { @apply mb-2 mt-8 border-b pb-1 text-xl font-semibold; }
+  .notes h3 { @apply mb-1 mt-6 text-lg font-semibold; }
+  .notes h4 { @apply mb-1 mt-4 font-semibold; }
+  .notes p { @apply my-3; }
+  .notes ul { @apply my-3 list-disc pl-6; }
+  .notes ol { @apply my-3 list-decimal pl-6; }
+  .notes li { @apply my-1; }
+  .notes hr { @apply my-8; }
+  .notes strong { @apply font-semibold; }
+  .notes blockquote { @apply my-3 border-l-4 pl-4 text-muted-foreground; }
+  .notes table { @apply my-4 w-full border-collapse text-sm; }
+  .notes th, .notes td { @apply border px-3 py-2 text-left align-top; }
+  .notes th { @apply bg-secondary font-semibold; }
+}
