@@ -22,8 +22,8 @@ export const AI_LIMITS = {
 export const QUIZ_LIMITS = {
   minQuestions: 3,
   maxQuestions: 30,
-  perChunkMax: 12, // never ask for more than this from one 24k-character chunk
-  charsPerQuestion: 2000, // a chunk can supply about one question per this many characters
+  perChunkMax: 20, // never ask for more than this from one 24k-character chunk
+  charsPerQuestion: 800, // a chunk can supply about one question per this many characters
   minChunkChars: 400, // chunks with less text than this are skipped
   attemptsPerRequest: 3, // tries per chunk when the AI returns bad JSON or too few valid questions
   topUpRounds: 2, // extra rounds to replace questions lost to validation / duplicate filtering
