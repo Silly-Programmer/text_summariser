@@ -5,6 +5,7 @@ import { getDocument, isStale, updateDocument } from "@/lib/db/documents";
 import { processDocument } from "@/lib/pdf/process";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // background work after the response may run this long (Hobby plan maximum)
 
 // Re-runs processing for a document that failed or got stuck.
 export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {

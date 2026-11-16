@@ -11,7 +11,16 @@ export class PdfError extends Error {
 
 let pdfjsPromise: Promise<PdfJs> | null = null;
 export function loadPdfjs() {
-  return (pdfjsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs"));
+  return (pdfjsPromise ??= (async () => {
+    // pdfjs normally finds its worker file with a runtime string import("./pdf.worker.mjs"), which
+    // Vercel's file tracing cannot see, so the file is missing in production ("fake worker failed").
+    // Importing it here with a plain string makes it part of the deployed bundle, and pdfjs
+    // picks it up from globalThis.pdfjsWorker without looking for a file.
+    // @ts-ignore - the worker file ships without type declarations
+    const worker = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    (globalThis as { pdfjsWorker?: unknown }).pdfjsWorker = worker;
+    return import("pdfjs-dist/legacy/build/pdf.mjs");
+  })());
 }
 
 // pdfjs needs these URLs to end with "/" (even on Windows, where path.sep is "\").
@@ -27,6 +36,8 @@ export async function openPdf(data: Uint8Array): Promise<{ doc: PdfDoc; close: (
       standardFontDataUrl: assetDir("standard_fonts"),
       cMapUrl: assetDir("cmaps"),
       cMapPacked: true,
+      wasmUrl: assetDir("wasm"), // JPEG2000 / JBIG2 decoders: common in scanned PDFs
+      iccUrl: assetDir("iccs"),
     });
     const doc = await task.promise;
     return { doc, close: () => task.destroy() };

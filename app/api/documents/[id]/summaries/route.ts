@@ -9,6 +9,7 @@ import { SUMMARY_TYPES, TYPE_LABEL, type SummaryType } from "@/lib/summarize/pro
 import { generateSummary } from "@/lib/summarize/generate";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // background work after the response may run this long (Hobby plan maximum)
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {

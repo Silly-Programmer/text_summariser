@@ -11,6 +11,7 @@ import { createQuizBody } from "@/lib/quiz/schema";
 import { generateQuiz } from "@/lib/quiz/generate";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // background work after the response may run this long (Hobby plan maximum)
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {

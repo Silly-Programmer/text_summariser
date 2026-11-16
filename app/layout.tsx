@@ -6,7 +6,7 @@ import "./globals.css";
 const font = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Study Assistant",
+  title: "StudyBuddy",
   description: "Turn your PDFs into easy notes and quizzes.",
 };
 

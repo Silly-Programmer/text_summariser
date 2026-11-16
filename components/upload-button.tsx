@@ -20,21 +20,40 @@ export function UploadButton({ variant = "default" }: { variant?: "default" | "o
     if (file.size === 0) return setError("This file is empty.");
     if (file.size > LIMITS.maxPdfBytes) return setError(`This file is ${formatBytes(file.size)}. The limit is ${formatBytes(LIMITS.maxPdfBytes)}.`);
 
-    const form = new FormData();
-    form.append("file", file);
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/documents");
-    xhr.upload.onprogress = (e) => e.lengthComputable && setPercent(Math.round((e.loaded / e.total) * 100));
-    xhr.onload = () => {
-      let body: { id?: string; error?: string } = {};
-      try { body = JSON.parse(xhr.responseText); } catch {}
-      if (xhr.status === 201 && body.id) return router.push(`/documents/${body.id}`);
-      setPercent(null);
-      setError(body.error ?? "Upload failed. Please try again.");
-    };
-    xhr.onerror = () => { setPercent(null); setError("Upload failed. Check your connection and try again."); };
     setPercent(0);
-    xhr.send(form);
+    start(file).catch((e: unknown) => {
+      setPercent(null);
+      setError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    });
+  }
+
+  /**
+   * 1) ask our server for a one-time upload URL, 2) upload the PDF straight to storage (with progress),
+   * 3) tell our server to start processing. The PDF never passes through our server, because Vercel
+   * rejects request bodies larger than 4.5 MB.
+   */
+  async function start(file: File) {
+    const res = await fetch("/api/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: file.name, size: file.size }),
+    });
+    const created = (await res.json().catch(() => ({}))) as { id?: string; uploadUrl?: string; error?: string };
+    if (!res.ok || !created.id || !created.uploadUrl) throw new Error(created.error ?? "Upload failed. Please try again.");
+
+    try {
+      await putFile(created.uploadUrl, file, (p) => setPercent(p));
+      const started = await fetch(`/api/documents/${created.id}/start`, { method: "POST" });
+      if (!started.ok) {
+        const body = (await started.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Could not start processing. Please try again.");
+      }
+    } catch (e) {
+      // don't leave a half-uploaded document in the list
+      fetch(`/api/documents/${created.id}`, { method: "DELETE" }).catch(() => {});
+      throw e;
+    }
+    router.push(`/documents/${created.id}`);
   }
 
   return (
@@ -57,4 +76,29 @@ export function UploadButton({ variant = "default" }: { variant?: "default" | "o
       {error && <p role="alert" className="max-w-xs text-sm text-destructive">{error}</p>}
     </div>
   );
+}
+
+/** Uploads to a Supabase signed upload URL. Uses XHR (not fetch) so we can show a percentage. */
+function putFile(url: string, file: File, onProgress: (percent: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("cacheControl", "3600");
+    form.append("", file); // Supabase expects the file under an empty field name
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("x-upsert", "true");
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) return resolve();
+      let msg = "Upload failed. Please try again.";
+      try {
+        const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+        if (xhr.status === 413) msg = "This file is too large for storage. Try a smaller PDF.";
+        else if (body.message || body.error) msg = `Upload failed: ${body.message ?? body.error}`;
+      } catch {}
+      reject(new Error(msg));
+    };
+    xhr.onerror = () => reject(new Error("Upload failed. Check your connection and try again."));
+    xhr.send(form);
+  });
 }

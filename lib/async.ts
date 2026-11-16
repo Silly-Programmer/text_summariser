@@ -24,3 +24,14 @@ export async function mapLimit<T, R>(
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Calls onTimeout after ms unless the returned cancel function runs first.
+ * Used by background jobs so they can mark themselves "failed" before the host kills the function.
+ */
+export function startDeadline(ms: number, onTimeout: () => void | Promise<void>): () => void {
+  const t = setTimeout(() => {
+    Promise.resolve(onTimeout()).catch(() => {});
+  }, ms);
+  return () => clearTimeout(t);
+}

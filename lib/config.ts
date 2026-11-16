@@ -9,6 +9,10 @@ export const LIMITS = {
   stuckAfterSeconds: 180, // show a "retry" button if no progress for this long
 };
 
+// Vercel kills a function at its maxDuration (300 s is the most the free Hobby plan allows).
+// Background jobs give up a little earlier so the user sees a clear message instead of a bar stuck forever.
+export const JOB_DEADLINE_MS = 265_000;
+
 export const AI_LIMITS = {
   concurrency: Number(process.env.AI_CONCURRENCY) || 2,
   reduceChars: 40_000, // max size of notes merged in one reduce step
