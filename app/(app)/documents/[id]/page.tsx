@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Info } from "lucide-react";
 import { requireUserId } from "@/lib/auth";
 import { UUID_RE } from "@/lib/errors";
-import { getDocument, isStale } from "@/lib/db/documents";
+import { getDocument, isStale, type DocumentRow } from "@/lib/db/documents";
 import { listSummariesForDocument } from "@/lib/db/summaries";
 import { listQuizzesForDocument } from "@/lib/db/quizzes";
 import { getQuizCapacity } from "@/lib/quiz/capacity";
@@ -24,13 +25,17 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
   const userId = await requireUserId();
-  const doc = await getDocument(userId, id);
-  if (!doc) notFound();
 
-  const [summaries, quizzes, quizMax] =
-    doc.status === "ready"
-      ? await Promise.all([listSummariesForDocument(userId, id), listQuizzesForDocument(userId, id), getQuizCapacity(userId, doc)])
-      : [[], [], 0];
+  // Start every query at the same time instead of one after the other (each one is a network round trip).
+  const docP = getDocument(userId, id);
+  const summariesP = listSummariesForDocument(userId, id);
+  const quizzesP = listQuizzesForDocument(userId, id);
+  summariesP.catch(() => {}); // no "unhandled rejection" noise if we leave early (e.g. notFound)
+  quizzesP.catch(() => {});
+
+  const doc = await docP;
+  if (!doc) notFound();
+  const summaries = doc.status === "ready" ? await summariesP : [];
 
   return (
     <>
@@ -81,32 +86,55 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
             </Card>
           )}
 
-          <h2 className="mb-3 mt-10 text-lg font-semibold">Test yourself</h2>
-          <QuizGenerator documentId={doc.id} maxQuestions={quizMax} />
-
-          <h2 className="mb-3 mt-10 text-lg font-semibold">Your quizzes</h2>
-          {quizzes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing yet. Choose the number of questions and a difficulty above to create your first quiz.</p>
-          ) : (
-            <Card>
-              <ul className="divide-y">
-                {quizzes.map((q) => (
-                  <li key={q.id} className="flex items-center gap-2 pr-2">
-                    <Link href={`/quizzes/${q.id}`} className="flex min-w-0 flex-1 items-center justify-between gap-3 px-5 py-3 text-sm transition-colors hover:bg-secondary">
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">{q.difficulty} quiz{q.status === "done" ? ` · ${q.question_count} questions` : ""}</span>
-                        <span className="text-muted-foreground">{formatDate(q.created_at)}{q.saved ? " · Saved" : ""}</span>
-                      </span>
-                      <StatusBadge status={q.status} />
-                    </Link>
-                    <DeleteItemButton kind="quizzes" id={q.id} title={`${q.difficulty} quiz (${formatDate(q.created_at)})`} iconOnly />
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
+          {/* Streams in after the rest of the page: working out the quiz capacity can be slow for big PDFs. */}
+          <Suspense fallback={<QuizSectionSkeleton />}>
+            <QuizSection userId={userId} doc={doc} quizzesPromise={quizzesP} />
+          </Suspense>
         </>
       )}
     </>
+  );
+}
+
+type QuizListItem = Awaited<ReturnType<typeof listQuizzesForDocument>>[number];
+
+async function QuizSection({ userId, doc, quizzesPromise }: { userId: string; doc: DocumentRow; quizzesPromise: Promise<QuizListItem[]> }) {
+  const [quizzes, quizMax] = await Promise.all([quizzesPromise, getQuizCapacity(userId, doc)]);
+  return (
+    <>
+      <h2 className="mb-3 mt-10 text-lg font-semibold">Test yourself</h2>
+      <QuizGenerator documentId={doc.id} maxQuestions={quizMax} />
+
+      <h2 className="mb-3 mt-10 text-lg font-semibold">Your quizzes</h2>
+      {quizzes.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nothing yet. Choose the number of questions and a difficulty above to create your first quiz.</p>
+      ) : (
+        <Card>
+          <ul className="divide-y">
+            {quizzes.map((q) => (
+              <li key={q.id} className="flex items-center gap-2 pr-2">
+                <Link href={`/quizzes/${q.id}`} className="flex min-w-0 flex-1 items-center justify-between gap-3 px-5 py-3 text-sm transition-colors hover:bg-secondary">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{q.difficulty} quiz{q.status === "done" ? ` · ${q.question_count} questions` : ""}</span>
+                    <span className="text-muted-foreground">{formatDate(q.created_at)}{q.saved ? " · Saved" : ""}</span>
+                  </span>
+                  <StatusBadge status={q.status} />
+                </Link>
+                <DeleteItemButton kind="quizzes" id={q.id} title={`${q.difficulty} quiz (${formatDate(q.created_at)})`} iconOnly />
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function QuizSectionSkeleton() {
+  return (
+    <div className="animate-pulse" aria-busy="true" aria-label="Loading quizzes">
+      <div className="mb-3 mt-10 h-6 w-36 rounded-md bg-secondary" />
+      <div className="h-32 rounded-lg border bg-card" />
+    </div>
   );
 }

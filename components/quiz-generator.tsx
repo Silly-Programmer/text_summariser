@@ -33,6 +33,7 @@ export function QuizGenerator({ documentId, maxQuestions }: { documentId: string
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Could not start. Please try again.");
       router.push(`/quizzes/${body.id}`);
+      router.refresh(); // clear cached pages so the document shows the new quiz
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start. Please try again.");
       setBusy(false);

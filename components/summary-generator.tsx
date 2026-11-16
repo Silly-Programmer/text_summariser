@@ -29,6 +29,7 @@ export function SummaryGenerator({ documentId }: { documentId: string }) {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Could not start. Please try again.");
       router.push(`/summaries/${body.id}`);
+      router.refresh(); // clear cached pages so the document shows the new summary
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start. Please try again.");
       setBusy(null);

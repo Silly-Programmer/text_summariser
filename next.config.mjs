@@ -23,6 +23,13 @@ const nextConfig = {
 
   devIndicators: false,
 
+  // Keep pages the user has already opened in the browser for a short while, so going back to
+  // Dashboard / My documents / Saved ... is instant instead of waiting for the server again.
+  // Anything that changes data calls router.refresh(), which clears this cache.
+  experimental: {
+    staleTimes: { dynamic: 30, static: 180 },
+  },
+
   // Packages that use native code / worker threads / data files must stay outside the bundle.
   serverExternalPackages: [
     "pdfjs-dist",

@@ -54,6 +54,7 @@ export function UploadButton({ variant = "default" }: { variant?: "default" | "o
       throw e;
     }
     router.push(`/documents/${created.id}`);
+    router.refresh(); // clear cached lists so Dashboard / My documents show the new file
   }
 
   return (

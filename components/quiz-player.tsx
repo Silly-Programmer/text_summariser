@@ -70,6 +70,7 @@ export function QuizPlayer({ quizId, questions }: { quizId: string; questions: P
         sessionStorage.removeItem(storageKey);
       } catch {}
       router.push(`/quizzes/${quizId}/attempts/${body.id}`);
+      router.refresh(); // clear cached pages so attempt history and best score are up to date
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not submit your answers. Please try again.");
       setBusy(false);

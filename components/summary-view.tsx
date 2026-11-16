@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { ProgressBar } from "@/components/progress-bar";
@@ -12,6 +13,7 @@ import { IN_PROGRESS } from "@/lib/format";
 export type SummaryState = { id: string; status: string; progress: number; error: string | null; content: string; stale: boolean };
 
 export function SummaryView({ initial, documentId }: { initial: SummaryState; documentId: string }) {
+  const router = useRouter();
   const [s, setS] = useState(initial);
   const active = IN_PROGRESS.includes(s.status);
 
@@ -20,11 +22,16 @@ export function SummaryView({ initial, documentId }: { initial: SummaryState; do
     const timer = setInterval(async () => {
       try {
         const res = await fetch(`/api/summaries/${s.id}`, { cache: "no-store" });
-        if (res.ok) setS(await res.json());
+        if (res.ok) {
+          const next = await res.json();
+          setS(next);
+          // Finished: reload server data so the Save / Delete buttons appear and cached pages are not stale.
+          if (next.status === "done" || next.status === "failed") router.refresh();
+        }
       } catch {}
     }, 2500);
     return () => clearInterval(timer);
-  }, [active, s.id]);
+  }, [active, s.id, router]);
 
   if (s.status === "failed" || (active && s.stale)) {
     return (

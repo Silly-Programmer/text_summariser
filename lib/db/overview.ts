@@ -25,28 +25,27 @@ export async function getOverview(userId: string): Promise<Overview> {
   }
   try {
     const db = supabaseAdmin();
-    const count = (table: string) =>
-      db.from(table).select("id", { count: "exact", head: true }).eq("user_id", userId);
-    const countSaved = (table: string) => count(table).eq("saved", true);
+    const countSaved = (table: string) =>
+      db.from(table).select("id", { count: "exact", head: true }).eq("user_id", userId).eq("saved", true);
 
-    const [docs, sums, quizzes, recent] = await Promise.all([
-      count("documents"),
-      countSaved("summaries"),
-      countSaved("quizzes"),
+    // The document count and the 5 recent documents come back from ONE request (count: "exact" ignores the limit).
+    const [recent, sums, quizzes] = await Promise.all([
       db
         .from("documents")
-        .select("id,name,page_count,status,created_at")
+        .select("id,name,page_count,status,created_at", { count: "exact" })
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(5),
+      countSaved("summaries"),
+      countSaved("quizzes"),
     ]);
 
-    const failed = [docs, sums, quizzes, recent].find((r) => r.error);
+    const failed = [recent, sums, quizzes].find((r) => r.error);
     if (failed?.error) throw new Error(failed.error.message);
 
     return {
       ok: true,
-      documents: docs.count ?? 0,
+      documents: recent.count ?? 0,
       summaries: sums.count ?? 0,
       quizzes: quizzes.count ?? 0,
       recent: (recent.data ?? []) as unknown as RecentDocument[],
